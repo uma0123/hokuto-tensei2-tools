@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1a1a1a">
+<title>北斗転生トラッカー</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { background: #1a1a1a; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
+  color: #eee;
+  padding: 12px;
+  padding-bottom: 84px;
+  padding-top: max(12px, env(safe-area-inset-top));
+  font-size: 16px;
+  min-height: 100vh;
+}
+header {
+  text-align: center;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #333;
+}
+header h1 { font-size: 17px; color: #fff; font-weight: 600; }
+.summary {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 8px;
+  font-size: 12px;
+}
+.summary span {
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: #2a2a2a;
+}
+
+.filter-bar {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 4px;
+}
+.filter-bar button {
+  flex: 0 0 auto;
+  padding: 7px 14px;
+  border: 1px solid #444;
+  background: #2a2a2a;
+  color: #ccc;
+  border-radius: 16px;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.filter-bar button.active {
+  background: #4a90e2;
+  color: #fff;
+  border-color: #4a90e2;
+}
+
+.add-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.add-bar input {
+  flex: 1;
+  padding: 12px;
+  background: #2a2a2a;
+  border: 1px solid #444;
+  color: #fff;
+  border-radius: 8px;
+  font-size: 16px;
+  -webkit-appearance: none;
+}
+.add-bar button {
+  padding: 12px 22px;
+  background: #4a90e2;
+  border: none;
+  color: #fff;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.card {
+  background: #2a2a2a;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 10px;
+  border-left: 4px solid #666;
+  transition: opacity .2s;
+}
+.card.status-came { border-left-color: #4caf50; background: #1c2f20; }
+.card.status-no { border-left-color: #f44336; opacity: 0.55; }
+.card.status-unknown { border-left-color: #ff9800; }
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.machine-no {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.machine-no::before { content: '#'; color: #666; margin-right: 2px; }
+.delete-btn {
+  background: transparent;
+  color: #888;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  padding: 0 8px;
+  line-height: 1;
+}
+
+.counters {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.counter {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background: #1a1a1a;
+  border-radius: 8px;
+  padding: 4px;
+}
+.counter-label {
+  flex: 0 0 36px;
+  text-align: center;
+  font-size: 11px;
+  color: #888;
+}
+.counter-value {
+  flex: 1;
+  text-align: center;
+  font-size: 20px;
+  font-weight: bold;
+  color: #fff;
+}
+.counter button {
+  width: 36px;
+  height: 36px;
+  background: #3a3a3a;
+  border: none;
+  color: #fff;
+  border-radius: 6px;
+  font-size: 20px;
+  cursor: pointer;
+  font-weight: bold;
+}
+.counter button:active { background: #555; }
+
+.status-buttons {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.status-buttons button {
+  flex: 1;
+  padding: 10px 4px;
+  border: 1px solid #444;
+  background: #1a1a1a;
+  color: #aaa;
+  border-radius: 8px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.status-buttons button.selected.came { background: #4caf50; color: #fff; border-color: #4caf50; font-weight: bold; }
+.status-buttons button.selected.no { background: #f44336; color: #fff; border-color: #f44336; font-weight: bold; }
+.status-buttons button.selected.unknown { background: #ff9800; color: #fff; border-color: #ff9800; font-weight: bold; }
+
+.memo-input {
+  width: 100%;
+  padding: 8px;
+  background: #1a1a1a;
+  border: 1px solid #3a3a3a;
+  color: #fff;
+  border-radius: 6px;
+  font-size: 13px;
+  resize: none;
+  min-height: 32px;
+  font-family: inherit;
+  -webkit-appearance: none;
+}
+
+.timestamp {
+  font-size: 10px;
+  color: #555;
+  margin-top: 6px;
+  text-align: right;
+}
+
+.empty {
+  text-align: center;
+  color: #555;
+  padding: 60px 20px;
+  font-size: 14px;
+}
+
+.bottom-actions {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #1a1a1a;
+  padding: 10px;
+  padding-bottom: max(10px, env(safe-area-inset-bottom));
+  border-top: 1px solid #333;
+  display: flex;
+  gap: 8px;
+}
+.bottom-actions button {
+  flex: 1;
+  padding: 10px;
+  background: #3a3a3a;
+  color: #ccc;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.bottom-actions button.danger { background: #4a1a1a; color: #ffaaaa; }
+
+.hint {
+  font-size: 11px;
+  color: #555;
+  text-align: center;
+  margin: 8px 0 4px;
+}
+</style>
+</head>
+<body>
+  <header>
+    <h1>北斗転生 候補管理</h1>
+    <div class="summary" id="summary"></div>
+  </header>
+
+  <div class="filter-bar">
+    <button class="active" data-filter="all">全て</button>
+    <button data-filter="unknown">未確認</button>
+    <button data-filter="came">シャッター来た</button>
+    <button data-filter="no">見切り</button>
+  </div>
+
+  <div class="add-bar">
+    <input type="text" id="newNo" placeholder="台番号を入力" inputmode="numeric" pattern="[0-9]*">
+    <button id="addBtn">追加</button>
+  </div>
+
+  <div id="list"></div>
+  <div class="hint">データはこの端末のブラウザに保存されます</div>
+
+  <div class="bottom-actions">
+    <button id="exportBtn">CSV出力</button>
+    <button id="clearNoBtn">見切り削除</button>
+    <button id="clearAllBtn" class="danger">全削除</button>
+  </div>
+
+<script>
+const STORAGE_KEY = 'hokuto-tensei-tracker-v1';
+let entries = [];
+let currentFilter = 'all';
+
+function load() {
+  try {
+    entries = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  } catch(e) {
+    entries = [];
+  }
+}
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+}
+
+function fmtTime(ts) {
+  const d = new Date(ts);
+  return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+}
+
+function escapeHtml(s) {
+  return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function render() {
+  const list = document.getElementById('list');
+  const filtered = entries.filter(e => currentFilter === 'all' || e.shutter === currentFilter);
+
+  if (filtered.length === 0) {
+    list.innerHTML = '<div class="empty">' + (entries.length === 0 ? '上から台番号を追加してください' : '該当なし') + '</div>';
+  } else {
+    list.innerHTML = filtered.map(e => `
+      <div class="card status-${e.shutter}" data-id="${e.id}">
+        <div class="card-header">
+          <span class="machine-no">${escapeHtml(e.no)}</span>
+          <button class="delete-btn" data-action="del" aria-label="削除">×</button>
+        </div>
+        <div class="counters">
+          <div class="counter">
+            <button data-action="hit-dec">-</button>
+            <span class="counter-label">初当</span>
+            <span class="counter-value">${e.hits}</span>
+            <button data-action="hit-inc">+</button>
+          </div>
+          <div class="counter">
+            <button data-action="at-dec">-</button>
+            <span class="counter-label">AT</span>
+            <span class="counter-value">${e.at}</span>
+            <button data-action="at-inc">+</button>
+          </div>
+        </div>
+        <div class="status-buttons">
+          <button data-action="set-unknown" class="${e.shutter==='unknown'?'selected unknown':''}">未確認</button>
+          <button data-action="set-came" class="${e.shutter==='came'?'selected came':''}">シャッター来た</button>
+          <button data-action="set-no" class="${e.shutter==='no'?'selected no':''}">見切り</button>
+        </div>
+        <textarea class="memo-input" data-action="memo" placeholder="メモ (天井後G数・前兆種類・ホール状況など)" rows="1">${escapeHtml(e.memo)}</textarea>
+        <div class="timestamp">追加 ${fmtTime(e.created)} / 更新 ${fmtTime(e.updated)}</div>
+      </div>
+    `).join('');
+
+    // auto-grow memo
+    document.querySelectorAll('.memo-input').forEach(t => {
+      t.style.height = 'auto';
+      t.style.height = t.scrollHeight + 'px';
+    });
+  }
+
+  const counts = {
+    all: entries.length,
+    unknown: entries.filter(e => e.shutter === 'unknown').length,
+    came: entries.filter(e => e.shutter === 'came').length,
+    no: entries.filter(e => e.shutter === 'no').length,
+  };
+  document.getElementById('summary').innerHTML = `
+    <span>計 <b>${counts.all}</b></span>
+    <span style="color:#ff9800">未確認 <b>${counts.unknown}</b></span>
+    <span style="color:#4caf50">来た <b>${counts.came}</b></span>
+    <span style="color:#f44336">見切 <b>${counts.no}</b></span>
+  `;
+}
+
+function addEntry(no) {
+  const now = Date.now();
+  if (entries.find(e => e.no === no)) {
+    if (!confirm(`#${no} は既に登録されています。それでも追加しますか？`)) return;
+  }
+  entries.unshift({
+    id: now + '-' + Math.random().toString(36).slice(2,8),
+    no: no,
+    hits: 0,
+    at: 0,
+    shutter: 'unknown',
+    memo: '',
+    created: now,
+    updated: now,
+  });
+  save();
+  render();
+}
+
+function updateEntry(id, fn) {
+  const e = entries.find(x => x.id === id);
+  if (e) {
+    fn(e);
+    e.updated = Date.now();
+    save();
+    render();
+  }
+}
+
+function deleteEntry(id) {
+  entries = entries.filter(x => x.id !== id);
+  save();
+  render();
+}
+
+document.getElementById('addBtn').addEventListener('click', () => {
+  const input = document.getElementById('newNo');
+  const no = input.value.trim();
+  if (!no) return;
+  addEntry(no);
+  input.value = '';
+  input.blur();
+});
+
+document.getElementById('newNo').addEventListener('keydown', (ev) => {
+  if (ev.key === 'Enter') {
+    ev.preventDefault();
+    document.getElementById('addBtn').click();
+  }
+});
+
+document.querySelectorAll('.filter-bar button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-bar button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = btn.dataset.filter;
+    render();
+  });
+});
+
+document.getElementById('list').addEventListener('click', (ev) => {
+  const card = ev.target.closest('.card');
+  if (!card) return;
+  const id = card.dataset.id;
+  const action = ev.target.dataset.action;
+  if (!action) return;
+
+  switch (action) {
+    case 'del':
+      if (confirm('この台を削除しますか？')) deleteEntry(id);
+      break;
+    case 'hit-inc': updateEntry(id, e => e.hits++); break;
+    case 'hit-dec': updateEntry(id, e => { if (e.hits > 0) e.hits--; }); break;
+    case 'at-inc': updateEntry(id, e => e.at++); break;
+    case 'at-dec': updateEntry(id, e => { if (e.at > 0) e.at--; }); break;
+    case 'set-unknown': updateEntry(id, e => e.shutter = 'unknown'); break;
+    case 'set-came': updateEntry(id, e => e.shutter = 'came'); break;
+    case 'set-no': updateEntry(id, e => e.shutter = 'no'); break;
+  }
+});
+
+// Memo input - update without re-render to preserve focus
+document.getElementById('list').addEventListener('input', (ev) => {
+  if (ev.target.dataset.action === 'memo') {
+    const card = ev.target.closest('.card');
+    const id = card.dataset.id;
+    const e = entries.find(x => x.id === id);
+    if (e) {
+      e.memo = ev.target.value;
+      e.updated = Date.now();
+      save();
+      // auto-grow
+      ev.target.style.height = 'auto';
+      ev.target.style.height = ev.target.scrollHeight + 'px';
+    }
+  }
+});
+
+document.getElementById('exportBtn').addEventListener('click', () => {
+  if (entries.length === 0) {
+    alert('データがありません');
+    return;
+  }
+  const headers = ['追加日時','更新日時','台番号','初当','AT','シャッター','メモ'];
+  const labels = { unknown:'未確認', came:'来た', no:'見切り' };
+  const rows = entries.map(e => [
+    new Date(e.created).toLocaleString('ja-JP'),
+    new Date(e.updated).toLocaleString('ja-JP'),
+    e.no,
+    e.hits,
+    e.at,
+    labels[e.shutter] || e.shutter,
+    (e.memo || '').replace(/[\n\r]/g, ' '),
+  ]);
+  const csv = [headers, ...rows].map(r =>
+    r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')
+  ).join('\n');
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const d = new Date();
+  const stamp = `${d.getFullYear()}${(d.getMonth()+1).toString().padStart(2,'0')}${d.getDate().toString().padStart(2,'0')}-${d.getHours().toString().padStart(2,'0')}${d.getMinutes().toString().padStart(2,'0')}`;
+  a.download = `hokuto-tensei-${stamp}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('clearNoBtn').addEventListener('click', () => {
+  const noCount = entries.filter(e => e.shutter === 'no').length;
+  if (noCount === 0) { alert('「見切り」の台はありません'); return; }
+  if (confirm(`「見切り」の${noCount}台を削除します`)) {
+    entries = entries.filter(e => e.shutter !== 'no');
+    save();
+    render();
+  }
+});
+
+document.getElementById('clearAllBtn').addEventListener('click', () => {
+  if (entries.length === 0) return;
+  if (confirm(`全${entries.length}台のデータを削除します。よろしいですか？`)) {
+    entries = [];
+    save();
+    render();
+  }
+});
+
+load();
+render();
+</script>
+</body>
+</html>
