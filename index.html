@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#1a1a1a">
-<title>Slot Tools — パチスロ機種別ツール集</title>
+<title>北斗の拳 転生の章2 ツール集</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   html, body { background: #1a1a1a; }
@@ -30,6 +30,12 @@
     font-size: 22px;
     color: #fff;
     font-weight: 700;
+    margin-bottom: 4px;
+  }
+  header .machine {
+    font-size: 11px;
+    color: #ffd54a;
+    letter-spacing: 0.6px;
     margin-bottom: 4px;
   }
   header .sub { font-size: 12px; color: #888; }
@@ -56,23 +62,35 @@
     text-decoration: none;
     transition: background 0.15s, border-color 0.15s;
   }
-  .tool-card:active { background: #2a2a2a; }
+  .tool-card:active { background: #2a2a2a; border-color: #4a90e2; }
   .tool-card .title {
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 600;
     color: #fff;
     margin-bottom: 4px;
   }
   .tool-card .desc {
     font-size: 12px;
-    color: #999;
-    line-height: 1.5;
+    color: #aaa;
+    line-height: 1.55;
   }
-  .tool-card .machine {
+  .tool-card .tag {
+    display: inline-block;
     font-size: 10px;
-    color: #ffd54a;
-    margin-bottom: 4px;
-    letter-spacing: 0.5px;
+    color: #6dd06d;
+    background: #1f4d1f;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-bottom: 6px;
+  }
+  .coming-soon {
+    background: #1a1a1a;
+    border: 1px dashed #444;
+    border-radius: 10px;
+    padding: 14px 16px;
+    color: #666;
+    text-align: center;
+    font-size: 12px;
   }
   .footer {
     margin-top: 40px;
@@ -87,25 +105,35 @@
 <body>
 
 <header>
-  <h1>🎰 Slot Tools</h1>
-  <div class="sub">パチスロ機種別 立ち回り支援ツール集</div>
+  <h1>北斗の拳 転生の章2 ツール集</h1>
+  <div class="machine">スマスロ / 6.5号機 / サミー</div>
+  <div class="sub">立ち回り支援ツールまとめ</div>
 </header>
 
 <div class="category">
-  <h2>北斗の拳 転生の章2</h2>
-  <a class="tool-card" href="hokuto-tensei2/shutter.html">
-    <div class="machine">L北斗の拳 転生の章2 / スマスロ 6.5号機</div>
+  <h2>📊 期待値・記録系</h2>
+  <a class="tool-card" href="shutter/">
+    <span class="tag">期待値自動算出</span>
     <div class="title">シャッター狙い記録ツール</div>
     <div class="desc">
-      周辺台を目視チェック → 開始条件・現在あべし・シャッターを記録すると
-      自動で期待出玉率を算出し、優先順位順に並び替え。
-      AT後即やめ / 2周目以降続行の計算モード切替可。
+      周辺台を目視で監視する際の記録ツール。<br>
+      店舗・台レンジ管理 / 開始条件(AT後/設変) × 現在あべし × シャッター状態から
+      期待出玉率を自動算出 / 期待値順ソートで優先台が一目で分かる。<br>
+      AT後即やめ / 2周目以降続行 の計算モード切替対応。
     </div>
   </a>
 </div>
 
+<div class="category">
+  <h2>🛠 今後追加予定</h2>
+  <div class="coming-soon">
+    天井狙い計算ツール / モード推測支援 など、随時追加していきます
+  </div>
+</div>
+
 <div class="footer">
-  © uma0123 / Slot Tools
+  © uma0123 / Hokuto Tensei2 Tools<br>
+  期待値データ提供：すろらぼ / だくお氏シミュレート
 </div>
 
 </body>
