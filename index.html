@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1a1a1a">
+<title>Slot Tools — パチスロ機種別ツール集</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { background: #1a1a1a; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
+    color: #eee;
+    padding: 20px;
+    padding-top: max(20px, env(safe-area-inset-top));
+    font-size: 15px;
+    min-height: 100vh;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  header {
+    text-align: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #333;
+  }
+  header h1 {
+    font-size: 22px;
+    color: #fff;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  header .sub { font-size: 12px; color: #888; }
+
+  .category {
+    margin-bottom: 24px;
+  }
+  .category h2 {
+    font-size: 14px;
+    color: #4a90e2;
+    margin-bottom: 10px;
+    padding-left: 6px;
+    border-left: 3px solid #4a90e2;
+    font-weight: 600;
+  }
+  .tool-card {
+    display: block;
+    background: #232323;
+    border: 1px solid #333;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    color: #eee;
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .tool-card:active { background: #2a2a2a; }
+  .tool-card .title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+  .tool-card .desc {
+    font-size: 12px;
+    color: #999;
+    line-height: 1.5;
+  }
+  .tool-card .machine {
+    font-size: 10px;
+    color: #ffd54a;
+    margin-bottom: 4px;
+    letter-spacing: 0.5px;
+  }
+  .footer {
+    margin-top: 40px;
+    text-align: center;
+    font-size: 10px;
+    color: #555;
+    border-top: 1px solid #2a2a2a;
+    padding-top: 16px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🎰 Slot Tools</h1>
+  <div class="sub">パチスロ機種別 立ち回り支援ツール集</div>
+</header>
+
+<div class="category">
+  <h2>北斗の拳 転生の章2</h2>
+  <a class="tool-card" href="hokuto-tensei2/shutter.html">
+    <div class="machine">L北斗の拳 転生の章2 / スマスロ 6.5号機</div>
+    <div class="title">シャッター狙い記録ツール</div>
+    <div class="desc">
+      周辺台を目視チェック → 開始条件・現在あべし・シャッターを記録すると
+      自動で期待出玉率を算出し、優先順位順に並び替え。
+      AT後即やめ / 2周目以降続行の計算モード切替可。
+    </div>
+  </a>
+</div>
+
+<div class="footer">
+  © uma0123 / Slot Tools
+</div>
+
+</body>
+</html>

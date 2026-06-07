@@ -1,0 +1,1760 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1a1a1a">
+<title>北斗転生 シャッター狙い記録</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { background: #1a1a1a; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
+    color: #eee;
+    padding: 10px;
+    padding-bottom: 96px;
+    padding-top: max(10px, env(safe-area-inset-top));
+    font-size: 14px;
+    min-height: 100vh;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #333;
+  }
+  header h1 { font-size: 15px; color: #fff; font-weight: 600; }
+  header .sub { font-size: 10px; color: #888; margin-top: 3px; }
+
+  /* 説明パネル */
+  .info-panel {
+    background: #232323;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    font-size: 11px;
+    color: #bbb;
+    line-height: 1.55;
+  }
+  .info-panel summary {
+    cursor: pointer;
+    color: #4a90e2;
+    font-size: 12px;
+    font-weight: 600;
+    user-select: none;
+    list-style: none;
+  }
+  .info-panel summary::before { content: '▶ '; font-size: 10px; }
+  .info-panel[open] summary::before { content: '▼ '; }
+  .info-panel .body { margin-top: 8px; }
+  .info-panel .zones {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 4px;
+    margin: 6px 0;
+    font-size: 10px;
+    text-align: center;
+  }
+  .info-panel .zones div {
+    background: #6b5500;
+    color: #ffd54a;
+    padding: 4px 2px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+  .info-panel strong { color: #fff; }
+  .info-panel em { color: #ff7b7b; font-style: normal; font-weight: 600; }
+
+  /* 店舗バー */
+  .store-bar {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+  }
+  .store-bar button {
+    flex: 0 0 auto;
+    padding: 7px 12px;
+    border: 1px solid #444;
+    background: #2a2a2a;
+    color: #ccc;
+    border-radius: 16px;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .store-bar button.active {
+    background: #4a90e2;
+    color: #fff;
+    border-color: #4a90e2;
+  }
+  .store-bar button.add-store {
+    background: #2a2a2a;
+    color: #aaa;
+    border-style: dashed;
+  }
+
+  /* 店舗ツールバー */
+  .store-tools {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+    font-size: 11px;
+    color: #888;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .store-tools .store-info { flex: 1 1 100%; margin-bottom: 4px; }
+  .store-tools button {
+    padding: 6px 10px;
+    background: #2a2a2a;
+    border: 1px solid #444;
+    color: #ccc;
+    border-radius: 6px;
+    font-size: 11px;
+    cursor: pointer;
+  }
+  .store-tools button.danger-btn {
+    background: #2a2a2a;
+    border-color: #5b1f1f;
+    color: #ff9b9b;
+  }
+
+  /* 凡例 */
+  .legend {
+    display: flex;
+    gap: 6px;
+    font-size: 10px;
+    color: #888;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+  .legend span { padding: 3px 7px; border-radius: 8px; background: #2a2a2a; }
+  .legend .lg-zone { color: #ffd54a; }
+  .legend .lg-fake { color: #ff7b7b; }
+  .legend .lg-hit  { color: #6dd06d; }
+
+  /* 並び順切替 */
+  .sort-bar {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 8px;
+    overflow-x: auto;
+  }
+  .sort-bar button {
+    flex: 0 0 auto;
+    padding: 5px 10px;
+    border: 1px solid #444;
+    background: #2a2a2a;
+    color: #aaa;
+    border-radius: 12px;
+    font-size: 11px;
+    cursor: pointer;
+  }
+  .sort-bar button.active { background: #4a90e2; color: #fff; border-color: #4a90e2; }
+
+  /* 行リスト */
+  #machineList {
+    border: 1px solid #333;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #232323;
+  }
+  /* コンパクト2段レイアウト
+     1段目: [台 38px] [あべし 70px] [開始 90px] [シャッター 100px] [期待値 60px] [削除 22px] */
+  .row-head, .row {
+    display: grid;
+    grid-template-columns: 38px 1fr 92px 102px 58px 22px;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 6px;
+    border-bottom: 1px solid #2a2a2a;
+  }
+  /* 2段目（前回初当/メモ） */
+  .row-extra {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 88px 1fr 64px;
+    gap: 4px;
+    margin-top: 4px;
+    padding-top: 4px;
+    border-top: 1px dashed #2c2c2c;
+  }
+  .row-extra input, .row-extra textarea {
+    padding: 4px 6px;
+    background: #1a1a1a;
+    border: 1px solid #444;
+    color: #ddd;
+    border-radius: 4px;
+    font-size: 11px;
+    -webkit-appearance: none;
+    width: 100%;
+    min-width: 0;
+  }
+  .row-extra input[disabled] {
+    opacity: 0.5;
+    background: #222;
+  }
+  .row-extra .ext-prev {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 10px;
+    color: #999;
+  }
+  .row-extra .ext-prev input { width: 44px; text-align: right; }
+  .row-extra .ext-fake {
+    display: flex;
+    gap: 2px;
+  }
+  .row-extra .ext-fake button {
+    flex: 1;
+    padding: 4px 2px;
+    background: #2a2a2a;
+    border: 1px solid #444;
+    color: #999;
+    border-radius: 4px;
+    font-size: 9px;
+    cursor: pointer;
+    font-weight: 600;
+    min-width: 0;
+  }
+  .row-extra .ext-fake button.on-warn { background: #d68a00; color: #fff; border-color: #d68a00; }
+  .row-extra .ext-fake button.on-off { background: #555; color: #fff; border-color: #666; }
+  .row-extra .ext-fake button.on-unknown { background: #3a3a3a; color: #ddd; border-color: #555; }
+  .row-extra .ext-fake-wrap {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    font-size: 10px;
+    color: #ffd54a;
+    margin-top: 2px;
+  }
+  .row-extra .ext-fake-wrap .label-fake { font-weight: 700; }
+  /* 削除ボタン（1段目末尾の小さい X） */
+  .col-del {
+    background: transparent;
+    border: 1px solid #5b1f1f;
+    color: #ff7b7b;
+    border-radius: 4px;
+    font-size: 12px;
+    padding: 3px 0;
+    cursor: pointer;
+    width: 100%;
+  }
+  .row-head {
+    font-size: 10px;
+    color: #aaa;
+    background: #1a1a1a;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    font-weight: 600;
+    padding: 6px 6px;
+  }
+  .row {
+    cursor: pointer;
+    font-size: 12px;
+  }
+  .row .col-no { font-size: 13px; }
+  .row .col-game input {
+    width: 100%;
+    max-width: 64px;
+    padding: 5px 4px;
+    font-size: 13px;
+  }
+  .row .col-game .unit { display: none; }
+  /* 行内の小さい3択・2択ボタン */
+  .row .inline-seg {
+    display: flex;
+    gap: 2px;
+    width: 100%;
+  }
+  .row .inline-seg button {
+    flex: 1;
+    padding: 5px 2px;
+    background: #2a2a2a;
+    border: 1px solid #444;
+    color: #999;
+    border-radius: 4px;
+    font-size: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    line-height: 1.1;
+    min-width: 0;
+  }
+  .row .inline-seg button.on-warn { background: #d68a00; color: #fff; border-color: #d68a00; }
+  .row .inline-seg button.on-off { background: #555; color: #fff; border-color: #666; }
+  .row .inline-seg button.on-unknown { background: #3a3a3a; color: #ddd; border-color: #555; }
+  .row .inline-seg button.on-blue { background: #4a90e2; color: #fff; border-color: #4a90e2; }
+  .row .col-expand { font-size: 11px; color: #666; text-align: center; }
+  .col-ev {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 2px;
+    border-radius: 5px;
+    background: #2a2a2a;
+    color: #666;
+    line-height: 1.15;
+  }
+  .col-ev .ev-note { font-size: 8px; color: #888; font-weight: normal; display: block; margin-top: 1px; }
+  .col-ev.ev-plus { background: #1f4d1f; color: #6dd06d; }
+  .col-ev.ev-plus .ev-note { color: #6dd06d99; }
+  .col-ev.ev-high { background: #2a6b2a; color: #b0f0b0; }
+  .col-ev.ev-high .ev-note { color: #b0f0b099; }
+  .col-ev.ev-top { background: #d68a00; color: #fff; }
+  .col-ev.ev-top .ev-note { color: #ffffffcc; }
+  .col-ev.ev-na { color: #555; font-size: 10px; }
+  .row:last-child { border-bottom: none; }
+  .row .col-no { font-weight: 600; color: #fff; font-size: 14px; }
+  .row .col-game {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .row .col-game input {
+    width: 70px;
+    padding: 6px 8px;
+    background: #1a1a1a;
+    border: 1px solid #444;
+    color: #fff;
+    border-radius: 5px;
+    font-size: 14px;
+    text-align: right;
+    -webkit-appearance: none;
+  }
+  .row .col-game .unit { font-size: 10px; color: #777; }
+  .row .col-status {
+    font-size: 10px;
+    padding: 3px 6px;
+    border-radius: 8px;
+    background: #2a2a2a;
+    color: #888;
+    text-align: center;
+    line-height: 1.3;
+    word-break: keep-all;
+  }
+  .row .col-expand { color: #666; text-align: center; }
+
+  /* 期待値帯に応じた行全体の色付け（優先度の可視化） */
+  .row.has-ev-top  { background: rgba(214, 138, 0, 0.22); border-left: 3px solid #d68a00; }
+  .row.has-ev-high { background: rgba(42, 107, 42, 0.28); border-left: 3px solid #2a6b2a; }
+  .row.has-ev-plus { background: rgba(31, 77, 31, 0.20); border-left: 3px solid #1f4d1f; }
+  .row.has-ev-minus { background: rgba(60, 60, 60, 0.20); border-left: 3px solid #444; }
+  .row.has-ev-none { border-left: 3px solid transparent; }
+
+  /* 連番が途切れる箇所のセパレータ */
+  .gap-sep {
+    padding: 4px 10px;
+    background: #1a1a1a;
+    color: #888;
+    font-size: 10px;
+    border-top: 2px dashed #d68a00;
+    border-bottom: 1px solid #333;
+    text-align: center;
+    line-height: 1.3;
+  }
+  .gap-sep strong { color: #ffd54a; }
+
+  /* 詳細パネル */
+  .detail {
+    grid-column: 1 / -1;
+    padding: 10px 12px 14px;
+    background: #1a1a1a;
+    border-top: 1px dashed #333;
+    display: none;
+  }
+  .row.open .detail { display: block; }
+
+  .detail .d-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin-bottom: 6px;
+    font-size: 12px;
+  }
+  .detail .d-row label {
+    flex: 0 0 110px;
+    color: #ddd;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .detail .d-row input[type="number"] {
+    flex: 1;
+    padding: 7px 9px;
+    background: #232323;
+    border: 1px solid #444;
+    color: #fff;
+    border-radius: 5px;
+    font-size: 14px;
+    text-align: right;
+    -webkit-appearance: none;
+  }
+  .detail .d-row .unit { font-size: 10px; color: #777; }
+
+  .toggle-row {
+    display: flex;
+    gap: 5px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+  .toggle-row button {
+    flex: 1;
+    min-width: 70px;
+    padding: 7px 6px;
+    background: #232323;
+    border: 1px solid #444;
+    color: #888;
+    border-radius: 5px;
+    font-size: 11px;
+    cursor: pointer;
+  }
+  .toggle-row button.on-warn { background: #d68a00; color: #fff; border-color: #d68a00; }
+  .toggle-row button.on-hit { background: #2f8c2f; color: #fff; border-color: #2f8c2f; }
+
+  .seg {
+    flex: 1;
+    padding: 7px 4px;
+    background: #232323;
+    border: 1px solid #444;
+    color: #888;
+    border-radius: 5px;
+    font-size: 11px;
+    cursor: pointer;
+  }
+  .seg.on-warn { background: #d68a00; color: #fff; border-color: #d68a00; }
+  .seg.on-off { background: #555; color: #fff; border-color: #555; }
+  .seg.on-unknown { background: #3a3a3a; color: #ccc; border-color: #555; }
+
+  .d-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .d-actions button {
+    flex: 1;
+    padding: 6px;
+    background: #2a2a2a;
+    border: 1px solid #444;
+    color: #ccc;
+    border-radius: 5px;
+    font-size: 11px;
+    cursor: pointer;
+  }
+  .d-actions .del { color: #ff7b7b; border-color: #5b1f1f; }
+
+  .d-memo {
+    width: 100%;
+    margin-top: 6px;
+    padding: 6px 8px;
+    background: #232323;
+    border: 1px solid #444;
+    color: #ccc;
+    border-radius: 5px;
+    font-size: 12px;
+    resize: vertical;
+    min-height: 36px;
+    -webkit-appearance: none;
+  }
+
+  .d-events {
+    margin-top: 6px;
+    font-size: 10px;
+    color: #777;
+    padding: 5px 7px;
+    background: #232323;
+    border-radius: 5px;
+    border-left: 2px solid #444;
+  }
+  .d-events .ev { margin-right: 8px; }
+
+  .empty {
+    text-align: center;
+    color: #666;
+    padding: 40px 12px;
+    font-size: 13px;
+  }
+
+  /* フッター */
+  footer {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: #1a1a1a;
+    border-top: 1px solid #333;
+    padding: 10px 12px max(10px, env(safe-area-inset-bottom));
+    display: flex;
+    gap: 8px;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #888;
+    align-items: center;
+  }
+  footer #summary { flex: 1; }
+  footer button {
+    padding: 7px 10px;
+    background: #2a2a2a;
+    border: 1px solid #444;
+    color: #ccc;
+    border-radius: 6px;
+    font-size: 11px;
+    cursor: pointer;
+  }
+
+  /* モーダル */
+  .modal-bg {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.7);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+  }
+  .modal-bg.show { display: flex; }
+  .modal {
+    background: #232323;
+    border-radius: 10px;
+    padding: 16px;
+    width: 100%;
+    max-width: 360px;
+  }
+  .modal h2 { font-size: 14px; margin-bottom: 12px; color: #fff; }
+  .modal .field { margin-bottom: 10px; }
+  .modal .field label {
+    display: block;
+    font-size: 11px;
+    color: #888;
+    margin-bottom: 4px;
+  }
+  .modal input {
+    width: 100%;
+    padding: 10px;
+    background: #1a1a1a;
+    border: 1px solid #444;
+    color: #fff;
+    border-radius: 6px;
+    font-size: 16px;
+    -webkit-appearance: none;
+  }
+  .modal .range {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .modal .range input { text-align: center; }
+  .modal .range .sep { color: #888; }
+  .modal .hint {
+    font-size: 11px;
+    color: #777;
+    margin-top: 4px;
+  }
+  .modal .modal-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .modal .modal-actions button {
+    flex: 1;
+    padding: 10px;
+    border-radius: 6px;
+    border: none;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .modal .modal-actions .ok { background: #4a90e2; color: #fff; }
+  .modal .modal-actions .cancel { background: #444; color: #ccc; }
+  .modal .modal-actions .danger { background: #8c2a2a; color: #fff; }
+
+  /* 押下感 - 全ボタン共通 */
+  button { transition: transform 0.08s ease, filter 0.08s ease, background 0.15s ease, color 0.15s ease, border-color 0.15s ease; }
+  button:active { transform: scale(0.94); filter: brightness(1.25); }
+
+  /* ボタン押下時のフラッシュ演出（行全体を一瞬青く光らせる） */
+  @keyframes flashRow {
+    0%   { background: rgba(74, 144, 226, 0.5); }
+    100% { background: transparent; }
+  }
+  .row.flash { animation: flashRow 0.6s ease-out; }
+
+  /* トースト通知 */
+  .toast {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    background: #4a90e2;
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 22px;
+    font-size: 13px;
+    font-weight: 600;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 1000;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+    max-width: 80vw;
+    text-align: center;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  .toast.success { background: #2f8c2f; }
+  .toast.warn { background: #d68a00; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>スマスロ北斗転生2 シャッター狙い記録</h1>
+  <div class="sub">周辺台の目視チェック用 / 単位は「あべし」（液晶左上）</div>
+</header>
+
+<!-- 説明パネル -->
+<details class="info-panel">
+  <summary>シャッター狙い & 期待値の見方（タップで展開）</summary>
+  <div class="body">
+    <strong>あべしゾーン</strong> で <strong>シャッター作動</strong> 等の前兆が発生 →
+    <em>896あべし以内のAT当選濃厚</em>（通常Bモード以上示唆）。
+    <div class="zones">
+      <div>① 32-48</div>
+      <div>② 160-176</div>
+      <div>③ 288-304</div>
+      <div>④ 416-432</div>
+      <div>⑤ 480-496</div>
+    </div>
+    <strong>使い方：</strong><br>
+    1) 台の <strong>開始条件</strong>（AT後 / 設定変更後）を選択<br>
+    2) <strong>現在あべし</strong>（液晶左上）を入力<br>
+    3) <strong>シャッター</strong>（○あり / ✕なし / ? 未確認）を選択<br>
+    → 自動で <strong>期待出玉率</strong> を計算し、各台のバッジに表示。<br>
+    <br>
+    <strong>シャッター判定のルール：</strong><br>
+    各ゾーンの<strong>開始あべし〜終了あべし</strong>の間にシャッター演出が出るかをチェック。
+    終了あべしを超えるまでにシャッターが出なければ <em>「シャッターなし」</em>確定。<br>
+    例：ゾーン②（160-176）を176超過してもシャッターなし → ✕（シャッターなし）に切替<br>
+    <br>
+    <strong>期待値バッジの色：</strong><br>
+    <span style="background:#d68a00;color:#fff;padding:1px 6px;border-radius:3px;">120%↑</span>
+    <span style="background:#2a6b2a;color:#b0f0b0;padding:1px 6px;border-radius:3px;">110%↑</span>
+    <span style="background:#1f4d1f;color:#6dd06d;padding:1px 6px;border-radius:3px;">105%↑(ボーダー)</span>
+    <span style="background:#2a2a2a;color:#666;padding:1px 6px;border-radius:3px;">未満</span><br>
+    <br>
+    <em>※「あべし」は液晶左上カウンタ。1G≒1.8〜2あべしで進み、画面下のG数とは別物。</em><br>
+    <em>※ 天破の刻 滞在中はシャッター狙い判別が無効。</em><br>
+    <em>※ 出玉率は<strong>察知率90%</strong>基準（すろらぼ：だくお氏シミュレートデータ）。</em><br>
+    <br>
+    <strong>計算モード（上部「計算:」で切替）：</strong><br>
+    ・<strong>AT後即やめ</strong>：AT当選後すぐ移動する前提。1周目のみの期待値。<br>
+    ・<strong>2周目以降続行</strong>：伝承モード引き継ぎ・持越しあべし・ループ性を考慮した実戦値。
+    AT後0あべしでも約105.3%、設変0あべしでも約106.6%まで上昇。<br>
+  </div>
+</details>
+
+<!-- 店舗バー -->
+<div class="store-bar" id="storeBar"></div>
+
+<!-- 店舗ツール -->
+<div class="store-tools">
+  <span class="store-info" id="storeInfo">-</span>
+  <button id="rangeAddBtn" onclick="openRangeAddModal()">＋台レンジ追加</button>
+  <button id="rangeDelBtn" onclick="openRangeDelModal()" class="danger-btn">－台レンジ削除</button>
+  <button id="storeDelBtn" onclick="openStoreDelFromTool()" class="danger-btn">店舗削除</button>
+</div>
+
+<!-- 計算モード -->
+<div class="sort-bar" style="margin-bottom:6px;">
+  <span style="color:#888;font-size:11px;align-self:center;padding-right:6px;">計算:</span>
+  <button data-calc="immediate" id="calcImmediateBtn" onclick="setCalcMode('immediate')">AT後即やめ</button>
+  <button data-calc="loop" id="calcLoopBtn" onclick="setCalcMode('loop')">2周目以降続行</button>
+</div>
+
+<!-- 並び順 -->
+<div class="sort-bar">
+  <span style="color:#888;font-size:11px;align-self:center;padding-right:6px;">並び:</span>
+  <button data-sort="ev" class="active" onclick="setSort('ev')">期待値順</button>
+  <button data-sort="no_asc" onclick="setSort('no_asc')">台番号↑</button>
+  <button data-sort="no_desc" onclick="setSort('no_desc')">台番号↓</button>
+  <button data-sort="game_desc" onclick="setSort('game_desc')">あべし↑</button>
+</div>
+
+<!-- 行リスト -->
+<div id="machineList"></div>
+
+<!-- トースト -->
+<div class="toast" id="toast"></div>
+
+<!-- フッター -->
+<footer>
+  <span id="summary">- 台</span>
+  <div style="display:flex;gap:6px;">
+    <button onclick="exportData()">出力</button>
+    <button onclick="importData()">取込</button>
+  </div>
+</footer>
+
+<!-- 店舗追加モーダル -->
+<div class="modal-bg" id="storeModal">
+  <div class="modal">
+    <h2>店舗を追加</h2>
+    <div class="field">
+      <label>店舗名</label>
+      <input type="text" id="newStoreName" placeholder="例: マルハン渋谷">
+    </div>
+    <div class="field">
+      <label>台番号レンジ</label>
+      <div class="range">
+        <input type="number" id="newStoreFrom" placeholder="開始" inputmode="numeric">
+        <span class="sep">〜</span>
+        <input type="number" id="newStoreTo" placeholder="終了" inputmode="numeric">
+      </div>
+      <div class="hint">例: 1205〜1260 → 56台が自動生成されます（後から増減可）</div>
+    </div>
+    <div class="modal-actions">
+      <button class="cancel" onclick="closeStoreModal()">キャンセル</button>
+      <button class="ok" onclick="saveNewStore()">作成</button>
+    </div>
+  </div>
+</div>
+
+<!-- 店舗削除モーダル -->
+<div class="modal-bg" id="storeDelModal">
+  <div class="modal">
+    <h2 id="storeDelTitle">店舗を削除しますか？</h2>
+    <div style="color:#aaa;font-size:12px;margin-bottom:12px;">この店舗の全ての台データも削除されます。</div>
+    <div class="modal-actions">
+      <button class="cancel" onclick="closeStoreDelModal()">キャンセル</button>
+      <button class="danger" onclick="confirmDeleteStore()">削除</button>
+    </div>
+  </div>
+</div>
+
+<!-- 台レンジ追加モーダル -->
+<div class="modal-bg" id="rangeAddModal">
+  <div class="modal">
+    <h2>台レンジを追加</h2>
+    <div class="field">
+      <label>台番号レンジ</label>
+      <div class="range">
+        <input type="number" id="rangeAddFrom" placeholder="開始" inputmode="numeric">
+        <span class="sep">〜</span>
+        <input type="number" id="rangeAddTo" placeholder="終了" inputmode="numeric">
+      </div>
+      <div class="hint">既存の台番号はスキップされます</div>
+    </div>
+    <div class="modal-actions">
+      <button class="cancel" onclick="closeRangeAddModal()">キャンセル</button>
+      <button class="ok" onclick="confirmRangeAdd()">追加</button>
+    </div>
+  </div>
+</div>
+
+<!-- 台レンジ削除モーダル -->
+<div class="modal-bg" id="rangeDelModal">
+  <div class="modal">
+    <h2>台レンジを削除</h2>
+    <div class="field">
+      <label>削除する台番号レンジ</label>
+      <div class="range">
+        <input type="number" id="rangeDelFrom" placeholder="開始" inputmode="numeric">
+        <span class="sep">〜</span>
+        <input type="number" id="rangeDelTo" placeholder="終了" inputmode="numeric">
+      </div>
+      <div class="hint" id="rangeDelHint">該当する台がまとめて削除されます（取り消し不可）</div>
+    </div>
+    <div class="modal-actions">
+      <button class="cancel" onclick="closeRangeDelModal()">キャンセル</button>
+      <button class="danger" onclick="confirmRangeDel()">削除</button>
+    </div>
+  </div>
+</div>
+
+<script>
+//-------------------------------------------------
+// データ層
+//-------------------------------------------------
+const STORAGE_KEY = 'hokuto-tensei-shutter-v2';
+
+let state = load();
+let sortMode = 'ev';
+// 期待値計算モード：'immediate'=AT後即やめ / 'loop'=2周目以降続行
+let calcMode = localStorage.getItem('htshutter-calcmode') || 'immediate';
+
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+    // v1からのマイグレーション
+    const v1 = localStorage.getItem('hokuto-tensei-shutter-v1');
+    if (v1) return JSON.parse(v1);
+  } catch (e) {}
+  // 初期は店舗ゼロから始める
+  return { stores: [], currentStoreId: null };
+}
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+let lastChangedId = null;
+let flashTimer = null;
+function flashRow(id) {
+  lastChangedId = id;
+  clearTimeout(flashTimer);
+  flashTimer = setTimeout(() => { lastChangedId = null; }, 600);
+}
+
+// 行を再生成せずに、その行のバッジ・行クラスだけ更新（入力中フォーカス維持用）
+function quickUpdateRow(m) {
+  const row = document.querySelector(`.row[data-mid="${m.id}"]`);
+  if (!row) return;
+  // 期待値バッジ
+  const evInfo = calcEv(m);
+  const cls = evClass(evInfo?.ev);
+  const badge = row.querySelector('.col-ev');
+  if (badge) {
+    badge.className = 'col-ev ' + cls;
+    badge.innerHTML = evInfo
+      ? `${evInfo.ev != null ? evInfo.ev.toFixed(1)+'%' : '-'}<span class="ev-note">${escapeHtml(evInfo.note || '')}</span>`
+      : `<span class="ev-note">条件<br>未設定</span>`;
+  }
+  // 行全体クラスも更新
+  row.classList.remove('has-ev-top','has-ev-high','has-ev-plus','has-ev-minus','has-ev-none');
+  const evCol = evInfo?.ev;
+  if (evCol == null) row.classList.add('has-ev-none');
+  else if (evCol >= 120) row.classList.add('has-ev-top');
+  else if (evCol >= 110) row.classList.add('has-ev-high');
+  else if (evCol >= EV_BORDER) row.classList.add('has-ev-plus');
+  else row.classList.add('has-ev-minus');
+  // フッターサマリも軽く更新
+  renderSummary();
+}
+
+function quickUpdateField(id, field, val) {
+  const m = findMachine(id);
+  if (!m) return;
+  if (field === 'currentGame' || field === 'lastHit') {
+    m[field] = val === '' ? null : Math.max(0, parseInt(val, 10) || 0);
+  } else {
+    m[field] = val;
+  }
+  save();
+  quickUpdateRow(m);
+}
+
+let toastTimer = null;
+function showToast(msg, kind = '') {
+  const t = document.getElementById('toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.className = 'toast show ' + kind;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.className = 'toast ' + kind; }, 1400);
+}
+function currentStore() {
+  if (!state.stores.length) return null;
+  return state.stores.find(s => s.id === state.currentStoreId) || state.stores[0];
+}
+
+//-------------------------------------------------
+// ゾーン判定
+//-------------------------------------------------
+const ZONES = [
+  { no: 1, from:  32, to:  48 },
+  { no: 2, from: 160, to: 176 },
+  { no: 3, from: 288, to: 304 },
+  { no: 4, from: 416, to: 432 },
+  { no: 5, from: 480, to: 496 },
+];
+
+const FAKE_RANGES = [
+  { from:   1, to:  48 },
+  { from: 129, to: 176 },
+  { from: 257, to: 304 },
+  { from: 305, to: 320 },
+  { from: 385, to: 432 },
+  { from: 449, to: 496 },
+];
+
+//-------------------------------------------------
+// 出玉率テーブル（察知率90%基準・北斗転生2）
+// start: 'at' = AT後 / 'reset' = 設定変更後
+// shutter: 'unknown' = 狙い（未確認）/ 'yes' = あり / 'no' = なし
+//-------------------------------------------------
+const EV_TABLE = [
+  // AT後 / シャッター狙い(未確認)
+  {start:'at', shutter:'unknown', from:   0, ev:104.5},
+  {start:'at', shutter:'unknown', from:  16, ev:106.3},
+  {start:'at', shutter:'unknown', from:  32, ev:109.2},
+  {start:'at', shutter:'unknown', from:  48, ev:102.9},
+  {start:'at', shutter:'unknown', from:  64, ev:103.7},
+  {start:'at', shutter:'unknown', from:  80, ev:105.0},
+  {start:'at', shutter:'unknown', from:  96, ev:107.8},
+  {start:'at', shutter:'unknown', from: 128, ev:109.5},
+  {start:'at', shutter:'unknown', from: 144, ev:112.8},
+  {start:'at', shutter:'unknown', from: 160, ev:115.7},
+  {start:'at', shutter:'unknown', from: 176, ev:109.1},
+  {start:'at', shutter:'unknown', from: 192, ev:111.2},
+  {start:'at', shutter:'unknown', from: 208, ev:113.6},
+  {start:'at', shutter:'unknown', from: 224, ev:116.8},
+  {start:'at', shutter:'unknown', from: 256, ev:103.5},
+  {start:'at', shutter:'unknown', from: 272, ev:106.4},
+  {start:'at', shutter:'unknown', from: 288, ev:109.8},
+  {start:'at', shutter:'unknown', from: 304, ev:null}, // データ欠落
+  {start:'at', shutter:'unknown', from: 320, ev:102.1},
+  {start:'at', shutter:'unknown', from: 336, ev:105.1},
+  {start:'at', shutter:'unknown', from: 352, ev:109.8},
+  {start:'at', shutter:'unknown', from: 400, ev:113.9},
+  {start:'at', shutter:'unknown', from: 416, ev:119.5},
+  {start:'at', shutter:'unknown', from: 432, ev:110.2},
+  {start:'at', shutter:'unknown', from: 448, ev:114.9},
+  {start:'at', shutter:'unknown', from: 464, ev:119.3},
+  {start:'at', shutter:'unknown', from: 480, ev:126.8},
+  // AT後/シャッターなしは EV_AT_NO_SHUTTER (別テーブル) で管理
+
+  // 設定変更後 / シャッター狙い(未確認)
+  {start:'reset', shutter:'unknown', from:   0, ev:108.1},
+  {start:'reset', shutter:'unknown', from:  16, ev:110.3},
+  {start:'reset', shutter:'unknown', from:  32, ev:113.6},
+  {start:'reset', shutter:'unknown', from:  48, ev:107.1},
+  {start:'reset', shutter:'unknown', from:  64, ev:109.1},
+  {start:'reset', shutter:'unknown', from:  80, ev:111.3},
+  {start:'reset', shutter:'unknown', from:  96, ev:112.8},
+  {start:'reset', shutter:'unknown', from: 128, ev:112.8},
+  {start:'reset', shutter:'unknown', from: 144, ev:116.0},
+  {start:'reset', shutter:'unknown', from: 160, ev:119.7},
+  {start:'reset', shutter:'unknown', from: 176, ev:112.8},
+  {start:'reset', shutter:'unknown', from: 192, ev:114.9},
+  {start:'reset', shutter:'unknown', from: 208, ev:117.9},
+  {start:'reset', shutter:'unknown', from: 224, ev:121.1},
+  {start:'reset', shutter:'unknown', from: 256, ev:105.9},
+  {start:'reset', shutter:'unknown', from: 272, ev:108.3},
+  {start:'reset', shutter:'unknown', from: 288, ev:112.5},
+  {start:'reset', shutter:'unknown', from: 304, ev:103.9},
+  {start:'reset', shutter:'unknown', from: 320, ev:105.3},
+  {start:'reset', shutter:'unknown', from: 336, ev:107.4},
+  {start:'reset', shutter:'unknown', from: 352, ev:109.1},
+  {start:'reset', shutter:'unknown', from: 400, ev:116.7},
+  {start:'reset', shutter:'unknown', from: 416, ev:120.8},
+  {start:'reset', shutter:'unknown', from: 432, ev:113.4},
+  {start:'reset', shutter:'unknown', from: 448, ev:115.8},
+  // 設定変更後/シャッターなしは EV_RESET_NO_SHUTTER (別テーブル) で管理
+];
+
+// シャッターなし AT後 完全テーブル（0-1440あべし）
+const EV_AT_NO_SHUTTER = [
+  { from:    0, ev:  79.4 }, { from:   32, ev:  79.9 },
+  { from:   64, ev:  80.2 }, { from:   96, ev:  80.6 },
+  { from:  128, ev:  81.1 }, { from:  160, ev:  81.8 },
+  { from:  192, ev:  82.2 }, { from:  224, ev:  82.9 },
+  { from:  256, ev:  83.5 }, { from:  288, ev:  84.3 },
+  { from:  320, ev:  85.0 }, { from:  352, ev:  85.7 },
+  { from:  384, ev:  86.6 }, { from:  416, ev:  87.1 },
+  { from:  448, ev:  88.2 }, { from:  480, ev:  89.1 },
+  { from:  512, ev:  89.6 }, { from:  544, ev:  90.8 },
+  { from:  576, ev:  91.9 }, { from:  608, ev:  92.9 },
+  { from:  640, ev:  94.2 }, { from:  672, ev:  95.4 },
+  { from:  704, ev:  96.7 }, { from:  736, ev:  98.2 },
+  { from:  768, ev:  99.5 }, { from:  800, ev: 101.0 },
+  { from:  832, ev: 102.5 }, { from:  864, ev: 104.8 },
+  { from:  896, ev: 106.6 }, { from:  928, ev: 108.7 },
+  { from:  960, ev: 110.9 }, { from:  992, ev: 113.5 },
+  { from: 1024, ev: 116.0 }, { from: 1056, ev: 119.1 },
+  { from: 1088, ev: 122.4 }, { from: 1120, ev: 126.1 },
+  { from: 1152, ev: 130.3 }, { from: 1184, ev: 135.2 },
+  { from: 1216, ev: 140.8 }, { from: 1248, ev: 147.1 },
+  { from: 1280, ev: 146.8 }, { from: 1312, ev: 154.5 },
+  { from: 1344, ev: 161.5 }, { from: 1376, ev: 173.7 },
+  { from: 1408, ev: 177.7 }, { from: 1440, ev: 196.7 },
+];
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 2周目以降続行モード（伝承モード引き継ぎ+持越しあべし考慮、察知率90%）
+// シャッター狙い：察知率90%, AT終了後も続行
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const EV_LOOP_AT_SHUTTER_UNKNOWN = [
+  { from:   0, ev:105.3 }, { from:  16, ev:105.9 }, { from:  32, ev:107.1 },
+  { from:  48, ev:104.8 }, { from:  64, ev:105.1 }, { from:  80, ev:105.5 },
+  { from:  96, ev:106.6 }, { from: 128, ev:107.1 }, { from: 144, ev:107.9 },
+  { from: 160, ev:109.3 }, { from: 176, ev:106.8 }, { from: 192, ev:108.0 },
+  { from: 208, ev:108.4 }, { from: 224, ev:109.3 }, { from: 256, ev:105.0 },
+  { from: 272, ev:105.8 }, { from: 288, ev:107.4 }, { from: 304, ev:103.6 },
+  { from: 320, ev:104.6 }, { from: 336, ev:105.4 }, { from: 352, ev:107.2 },
+  { from: 384, ev:107.3 }, { from: 400, ev:108.3 }, { from: 416, ev:110.5 },
+  { from: 432, ev:107.4 }, { from: 448, ev:108.6 }, { from: 464, ev:110.1 },
+  { from: 480, ev:111.9 },
+];
+const EV_LOOP_RESET_SHUTTER_UNKNOWN = [
+  { from:   0, ev:106.6 }, { from:  16, ev:107.3 }, { from:  32, ev:108.4 },
+  { from:  48, ev:106.3 }, { from:  64, ev:106.9 }, { from:  80, ev:107.5 },
+  { from:  96, ev:108.1 }, { from: 128, ev:108.3 }, { from: 144, ev:109.2 },
+  { from: 160, ev:110.5 }, { from: 176, ev:108.1 }, { from: 192, ev:108.7 },
+  { from: 208, ev:109.5 }, { from: 224, ev:110.5 }, { from: 256, ev:105.8 },
+  { from: 272, ev:106.6 }, { from: 288, ev:108.1 }, { from: 304, ev:105.0 },
+  { from: 320, ev:105.3 }, { from: 336, ev:106.6 }, { from: 352, ev:106.9 },
+  { from: 384, ev:108.1 }, { from: 400, ev:109.5 }, { from: 416, ev:110.5 },
+  { from: 432, ev:108.3 }, { from: 448, ev:108.7 }, { from: 464, ev:110.6 },
+  { from: 480, ev:112.5 },
+];
+
+// シャッターなし 設定変更後 完全テーブル（0-1216あべし）
+const EV_RESET_NO_SHUTTER = [
+  { from:    0, ev:  82.3 }, { from:   32, ev:  82.7 },
+  { from:   64, ev:  83.0 }, { from:   96, ev:  83.9 },
+  { from:  128, ev:  84.8 }, { from:  160, ev:  85.1 },
+  { from:  192, ev:  85.9 }, { from:  224, ev:  86.8 },
+  { from:  256, ev:  87.4 }, { from:  288, ev:  88.4 },
+  { from:  320, ev:  89.1 }, { from:  352, ev:  89.9 },
+  { from:  384, ev:  91.3 }, { from:  416, ev:  91.9 },
+  { from:  448, ev:  93.1 }, { from:  480, ev:  94.4 },
+  { from:  512, ev:  95.5 }, { from:  544, ev:  96.9 },
+  { from:  576, ev:  98.4 }, { from:  608, ev: 100.0 },
+  { from:  640, ev: 101.8 }, { from:  672, ev: 103.5 },
+  { from:  704, ev: 105.2 }, { from:  736, ev: 107.4 },
+  { from:  768, ev: 109.5 }, { from:  800, ev: 111.8 },
+  { from:  832, ev: 114.2 }, { from:  864, ev: 117.2 },
+  { from:  896, ev: 121.4 }, { from:  928, ev: 124.9 },
+  { from:  960, ev: 128.0 }, { from:  992, ev: 132.5 },
+  { from: 1024, ev: 133.8 }, { from: 1056, ev: 139.5 },
+  { from: 1088, ev: 144.7 }, { from: 1120, ev: 151.9 },
+  { from: 1152, ev: 156.3 }, { from: 1184, ev: 166.7 },
+  { from: 1216, ev: 178.8 },
+];
+
+// 384ゾーン特例（フェイク天命有無で出玉率が分岐）
+const EV_FAKE_TENMEI = {
+  at:    { yes: 116.6, unknown: 110.2, no: 101.8 },
+  reset: { yes: 119.7, unknown: 112.3, no: 105.0 },
+};
+
+// シャッターあり確定時：AT後あべし別テーブル（0〜864あべし）
+const EV_AT_SHUTTER_YES = [
+  { from:   0, ev: 109.5 },
+  { from:  32, ev: 110.7 },
+  { from:  64, ev: 112.7 },
+  { from:  96, ev: 115.7 },
+  { from: 128, ev: 115.5 },
+  { from: 160, ev: 118.0 },
+  { from: 192, ev: 121.3 },
+  { from: 224, ev: 126.2 },
+  { from: 256, ev: 110.4 },
+  { from: 288, ev: 113.0 },
+  { from: 320, ev: 115.9 },
+  { from: 352, ev: 119.1 },
+  { from: 384, ev: 119.8 },
+  { from: 416, ev: 123.6 },
+  { from: 448, ev: 126.7 },
+  { from: 480, ev: 131.9 },
+  { from: 512, ev: 136.6 },
+  { from: 544, ev: 143.1 },
+  { from: 576, ev: 126.4 },
+  { from: 608, ev: 131.0 },
+  { from: 640, ev: 135.0 },
+  { from: 672, ev: 140.8 },
+  { from: 704, ev: 147.3 },
+  { from: 736, ev: 154.6 },
+  { from: 768, ev: 156.1 },
+  { from: 800, ev: 166.2 },
+  { from: 832, ev: 178.8 },
+  { from: 864, ev: 198.6 },
+];
+
+// シャッターあり確定時：設定変更後あべし別テーブル
+const EV_RESET_SHUTTER_YES = [
+  { from:   0, ev: 112.8 },
+  { from:  32, ev: 114.7 },
+  { from:  64, ev: 116.9 },
+  { from:  96, ev: 120.2 },
+  { from: 128, ev: 118.0 },
+  { from: 160, ev: 121.7 },
+  { from: 192, ev: 126.1 },
+  { from: 224, ev: 130.7 },
+  { from: 256, ev: 112.9 },
+  { from: 288, ev: 115.3 },
+  { from: 320, ev: 118.2 },
+  { from: 352, ev: 121.4 },
+  { from: 384, ev: 122.6 },
+  { from: 416, ev: 126.8 },
+  { from: 448, ev: 130.6 },
+  { from: 480, ev: 134.9 },
+  { from: 512, ev: 141.0 },
+  { from: 544, ev: 148.5 },
+  { from: 576, ev: 126.8 },
+  { from: 608, ev: 131.0 },
+  { from: 640, ev: 135.8 },
+  { from: 672, ev: 141.1 },
+  { from: 704, ev: 147.8 },
+  { from: 736, ev: 155.0 },
+  { from: 768, ev: 156.6 },
+  { from: 800, ev: 166.5 },
+  { from: 832, ev: 178.7 },
+  { from: 864, ev: 198.6 },
+];
+
+// 暫定（0-時のベース値）
+const EV_SHUTTER_YES = {
+  at: 109.5,
+  reset: 112.8,
+};
+
+// 期待値ボーダー（プラス域）
+const EV_BORDER = 105.0;
+
+function calcEv(m) {
+  const start = m.startCondition;
+  if (!start || start === 'unknown') return null; // 未選択は計算不可
+  const game = +m.currentGame;
+  if (isNaN(game) || m.currentGame == null || m.currentGame === '') return null;
+  const shutterState = m.shutterState || 'unknown';
+
+  // シャッターあり確定 → あべし別テーブルから引く
+  if (shutterState === 'yes') {
+    const tbl = start === 'at' ? EV_AT_SHUTTER_YES : EV_RESET_SHUTTER_YES;
+    const candidates = tbl.filter(r => r.from <= game);
+    if (candidates.length) {
+      const best = candidates.reduce((a, b) => a.from > b.from ? a : b);
+      return { ev: best.ev, note: `シャッターあり/${best.from}-` };
+    }
+    return { ev: EV_SHUTTER_YES[start], note: 'シャッターあり' };
+  }
+
+  // 384ゾーン特例（即やめ時のみ・続行モードでは下記の通常テーブルで処理）
+  if (calcMode === 'immediate' && game >= 384 && game < 400) {
+    const fakeState = m.fakeTenmei || 'unknown';
+    const ev = EV_FAKE_TENMEI[start]?.[fakeState];
+    if (ev != null) {
+      const labelMap = { yes: '有', no: '無', unknown: '未確' };
+      return { ev, note: `384-/フェイク天命${labelMap[fakeState]}` };
+    }
+  }
+
+  // シャッター無し確定 → 完全テーブル（即やめ前提だが続行でも当面これを使う）
+  if (shutterState === 'no') {
+    const tbl = start === 'at' ? EV_AT_NO_SHUTTER : EV_RESET_NO_SHUTTER;
+    const candidates = tbl.filter(r => r.from <= game);
+    if (!candidates.length) return null;
+    const best = candidates.reduce((a, b) => a.from > b.from ? a : b);
+    return { ev: best.ev, note: `シャッター無し/${best.from}-` };
+  }
+
+  // シャッター未確認（シャッター狙い）
+  // 続行モードなら専用テーブル、即やめなら既存EV_TABLE
+  if (calcMode === 'loop') {
+    const tbl = start === 'at' ? EV_LOOP_AT_SHUTTER_UNKNOWN : EV_LOOP_RESET_SHUTTER_UNKNOWN;
+    const candidates = tbl.filter(r => r.from <= game);
+    if (candidates.length) {
+      const best = candidates.reduce((a, b) => a.from > b.from ? a : b);
+      return { ev: best.ev, note: `続行/${best.from}-` };
+    }
+  }
+
+  // 即やめモード（既存テーブル）
+  const candidates = EV_TABLE.filter(r =>
+    r.start === start && r.shutter === shutterState && r.from <= game && r.ev != null
+  );
+  if (!candidates.length) return null;
+  const best = candidates.reduce((a, b) => a.from > b.from ? a : b);
+  return { ev: best.ev, note: `${best.from}-` };
+}
+
+function setCalcMode(mode) {
+  calcMode = mode;
+  localStorage.setItem('htshutter-calcmode', mode);
+  showToast(`計算モード: ${mode === 'loop' ? '2周目以降続行' : 'AT後即やめ'}`, 'success');
+  render();
+}
+
+function inZone(g) {
+  if (g == null || g === '') return null;
+  const n = +g;
+  return ZONES.find(z => n >= z.from && n <= z.to) || null;
+}
+function inFakeRange(g) {
+  if (g == null || g === '') return null;
+  const n = +g;
+  return FAKE_RANGES.find(r => n >= r.from && n <= r.to) || null;
+}
+
+function machineStatus(m) {
+  // シャッター状態のみで判定（ゾーン中/射程の表示は廃止）
+  const s = m.shutterState || 'unknown';
+  if (s === 'yes') return { kind: 'shutter-yes', label: 'シャッター\nあり' };
+  if (s === 'no')  return { kind: 'shutter-no', label: 'シャッター\nなし' };
+  return { kind: 'shutter-unknown', label: '未確認' };
+}
+
+//-------------------------------------------------
+// レンダリング
+//-------------------------------------------------
+function render() {
+  renderStoreBar();
+  renderStoreInfo();
+  renderMachineList();
+  renderSummary();
+  updateSortButtons();
+}
+
+function renderStoreBar() {
+  const bar = document.getElementById('storeBar');
+  bar.innerHTML = '';
+  state.stores.forEach(s => {
+    const btn = document.createElement('button');
+    btn.textContent = s.name;
+    if (s.id === state.currentStoreId) btn.classList.add('active');
+    btn.onclick = () => { state.currentStoreId = s.id; save(); render(); };
+    btn.onpointerdown = startStorePress(s);
+    bar.appendChild(btn);
+  });
+  const addBtn = document.createElement('button');
+  addBtn.textContent = '+ 店舗';
+  addBtn.classList.add('add-store');
+  addBtn.onclick = openStoreModal;
+  bar.appendChild(addBtn);
+}
+
+function renderStoreInfo() {
+  const s = currentStore();
+  const info = document.getElementById('storeInfo');
+  const rangeBtn = document.getElementById('rangeAddBtn');
+  const rangeDelBtn = document.getElementById('rangeDelBtn');
+  const storeDelBtn = document.getElementById('storeDelBtn');
+  const setBtnDisabled = (btn, disabled) => {
+    if (!btn) return;
+    btn.disabled = disabled;
+    btn.style.opacity = disabled ? '0.4' : '';
+    btn.style.cursor = disabled ? 'not-allowed' : '';
+  };
+  // 店舗がない場合は関連ボタンを全て無効化
+  if (!s) {
+    info.textContent = '店舗を追加してください →';
+    info.style.color = '#ff7b7b';
+    setBtnDisabled(rangeBtn, true);
+    setBtnDisabled(rangeDelBtn, true);
+    setBtnDisabled(storeDelBtn, true);
+    return;
+  }
+  info.style.color = '';
+  setBtnDisabled(rangeBtn, false);
+  setBtnDisabled(rangeDelBtn, s.machines.length === 0);
+  setBtnDisabled(storeDelBtn, false);
+  const total = s.machines.length;
+  if (total === 0) {
+    info.textContent = `${s.name}：台未登録 → 右の「＋台レンジ追加」`;
+    return;
+  }
+  const nos = s.machines.map(m => +m.no).filter(n => !isNaN(n));
+  if (nos.length === total) {
+    const min = Math.min(...nos), max = Math.max(...nos);
+    info.textContent = `${s.name}：${total}台（${min}〜${max}）`;
+  } else {
+    info.textContent = `${s.name}：${total}台`;
+  }
+}
+
+let pressTimer = null;
+function startStorePress(store) {
+  return (e) => {
+    clearTimeout(pressTimer);
+    pressTimer = setTimeout(() => openStoreDelModal(store), 800);
+    const cancel = () => clearTimeout(pressTimer);
+    e.target.addEventListener('pointerup', cancel, { once: true });
+    e.target.addEventListener('pointerleave', cancel, { once: true });
+    e.target.addEventListener('pointercancel', cancel, { once: true });
+  };
+}
+
+function renderMachineList() {
+  const list = document.getElementById('machineList');
+  const store = currentStore();
+  if (!store) {
+    list.innerHTML = '<div class="empty">上部の「+ 店舗」から店舗を追加してください</div>';
+    return;
+  }
+  if (!store.machines.length) {
+    list.innerHTML = '<div class="empty">右上の「＋台レンジ追加」から台を一括登録してください</div>';
+    return;
+  }
+  list.innerHTML = '';
+  // ヘッダ
+  const head = document.createElement('div');
+  head.className = 'row-head';
+  head.innerHTML = `<div>台</div><div>あべし</div><div style="text-align:center;">開始条件</div><div style="text-align:center;">シャッター</div><div style="text-align:center;">期待値</div><div style="text-align:center;font-size:9px;">削除</div>`;
+  list.appendChild(head);
+
+  const sorted = sortMachines(store.machines);
+  // 台番号↑ ソート時のみ、連番が途切れる箇所にセパレータを差し込む
+  const showGapSep = (sortMode === 'no_asc');
+  let prevNo = null;
+  sorted.forEach(m => {
+    const curNo = +m.no;
+    if (showGapSep && prevNo != null && !isNaN(curNo) && curNo > prevNo + 1) {
+      const sep = document.createElement('div');
+      sep.className = 'gap-sep';
+      const missing = curNo - prevNo - 1;
+      sep.innerHTML = `─ <strong>${prevNo}</strong> と <strong>${curNo}</strong> の間に${missing}台のブランク ─`;
+      list.appendChild(sep);
+    }
+    list.appendChild(renderRow(m));
+    if (!isNaN(curNo)) prevNo = curNo;
+  });
+}
+
+function sortMachines(arr) {
+  const order = { zone: 0, fake: 1, none: 2, hit: 3 };
+  const a = [...arr];
+  switch (sortMode) {
+    case 'no_asc':
+      return a.sort((x, y) => (+x.no || 0) - (+y.no || 0));
+    case 'no_desc':
+      return a.sort((x, y) => (+y.no || 0) - (+x.no || 0));
+    case 'game_desc':
+      return a.sort((x, y) => (+y.currentGame || 0) - (+x.currentGame || 0));
+    case 'ev':
+      return a.sort((x, y) => {
+        const ex = calcEv(x)?.ev ?? -Infinity;
+        const ey = calcEv(y)?.ev ?? -Infinity;
+        if (ey !== ex) return ey - ex;
+        return (+x.no || 0) - (+y.no || 0);
+      });
+    case 'status':
+    default:
+      return a.sort((x, y) => {
+        const sx = machineStatus(x), sy = machineStatus(y);
+        const d = (order[sx.kind] ?? 9) - (order[sy.kind] ?? 9);
+        if (d !== 0) return d;
+        return (+x.no || 0) - (+y.no || 0);
+      });
+  }
+}
+
+function renderRow(m) {
+  const row = document.createElement('div');
+  row.className = 'row';
+  row.dataset.mid = m.id;
+  // 期待値帯に応じて行全体の背景色を変える
+  const evInfoForCls = calcEv(m);
+  const evCol = evInfoForCls?.ev;
+  if (evCol == null) row.classList.add('has-ev-none');
+  else if (evCol >= 120) row.classList.add('has-ev-top');
+  else if (evCol >= 110) row.classList.add('has-ev-high');
+  else if (evCol >= EV_BORDER) row.classList.add('has-ev-plus');
+  else row.classList.add('has-ev-minus');
+  if (m.id === lastChangedId) row.classList.add('flash');
+
+  const evInfo = calcEv(m);
+  const evCls = evClass(evInfo?.ev);
+  const sc = m.startCondition;
+  const ss = m.shutterState || 'unknown';
+
+  const g = +m.currentGame;
+  const isFakeRange = g >= 384 && g < 400;
+  const isReset = m.startCondition === 'reset';
+  const lastHitVal = isReset ? 0 : (m.lastHit ?? '');
+
+  row.innerHTML = `
+    <div class="col-no">${escapeHtml(m.no)}</div>
+    <div class="col-game" onclick="event.stopPropagation()">
+      <input type="number" inputmode="numeric" value="${m.currentGame ?? ''}"
+             oninput="quickUpdateField('${m.id}','currentGame',this.value)"
+             onchange="updateField('${m.id}','currentGame',this.value)"
+             placeholder="液晶左上">
+    </div>
+    <div class="inline-seg" onclick="event.stopPropagation()">
+      <button type="button" class="${sc === 'at' ? 'on-blue' : ''}" onclick="event.stopPropagation();setStartCondition('${m.id}','at')">AT</button>
+      <button type="button" class="${sc === 'reset' ? 'on-blue' : ''}" onclick="event.stopPropagation();setStartCondition('${m.id}','reset')">設変</button>
+    </div>
+    <div class="inline-seg" onclick="event.stopPropagation()">
+      <button type="button" class="${ss === 'yes' ? 'on-warn' : ''}" onclick="event.stopPropagation();setShutterState('${m.id}','yes')">○</button>
+      <button type="button" class="${ss === 'no' ? 'on-off' : ''}" onclick="event.stopPropagation();setShutterState('${m.id}','no')">✕</button>
+      <button type="button" class="${ss === 'unknown' ? 'on-unknown' : ''}" onclick="event.stopPropagation();setShutterState('${m.id}','unknown')">?</button>
+    </div>
+    <div class="col-ev ${evCls}">${
+      evInfo
+        ? `${evInfo.ev != null ? evInfo.ev.toFixed(1)+'%' : '-'}<span class="ev-note">${escapeHtml(evInfo.note || '')}</span>`
+        : `<span class="ev-note">条件<br>未設定</span>`
+    }</div>
+    <button type="button" class="col-del" onclick="event.stopPropagation();deleteMachine('${m.id}')">✕</button>
+
+    <!-- 2段目: 前回初当たり / メモ / フェイク天命(該当時) -->
+    <div class="row-extra" onclick="event.stopPropagation()">
+      <div class="ext-prev">
+        <span style="white-space:nowrap;">初当${isReset ? '(0固定)' : ''}</span>
+        <input type="number" inputmode="numeric"
+               value="${lastHitVal}"
+               ${isReset ? 'disabled' : ''}
+               onchange="updateField('${m.id}','lastHit',this.value)"
+               placeholder="回">
+        <span style="font-size:9px;color:#888;">回</span>
+      </div>
+      <input type="text" value="${escapeHtml(m.memo || '')}"
+             onchange="updateField('${m.id}','memo',this.value)"
+             placeholder="メモ">
+      <div class="ext-fake" style="${isFakeRange ? '' : 'visibility:hidden;'}">
+        <button type="button" class="${m.fakeTenmei === 'yes' ? 'on-warn' : ''}" onclick="event.stopPropagation();setFakeTenmei('${m.id}','yes')">天命○</button>
+        <button type="button" class="${m.fakeTenmei === 'no' ? 'on-off' : ''}" onclick="event.stopPropagation();setFakeTenmei('${m.id}','no')">✕</button>
+        <button type="button" class="${(!m.fakeTenmei || m.fakeTenmei === 'unknown') ? 'on-unknown' : ''}" onclick="event.stopPropagation();setFakeTenmei('${m.id}','unknown')">?</button>
+      </div>
+    </div>
+  `;
+  return row;
+}
+
+// 旧 toggleExpand は廃止。expandedId 参照箇所は残しても無害。
+let expandedId = null;
+
+function renderSummary() {
+  const store = currentStore();
+  if (!store) {
+    document.getElementById('summary').textContent = '店舗未登録';
+    return;
+  }
+  const total = store.machines.length;
+  const plus = store.machines.filter(m => {
+    const e = calcEv(m); return e && e.ev != null && e.ev >= EV_BORDER;
+  }).length;
+  const sht  = store.machines.filter(m => m.shutter).length;
+  document.getElementById('summary').textContent =
+    `${total}台 / 期待値+${plus} / シャッター${sht}`;
+}
+
+function updateSortButtons() {
+  document.querySelectorAll('.sort-bar button[data-sort]').forEach(b => {
+    b.classList.toggle('active', b.dataset.sort === sortMode);
+  });
+  document.querySelectorAll('.sort-bar button[data-calc]').forEach(b => {
+    b.classList.toggle('active', b.dataset.calc === calcMode);
+  });
+}
+function setSort(mode) {
+  sortMode = mode;
+  render();
+}
+
+function evClass(ev) {
+  if (ev == null) return 'ev-na';
+  if (ev >= 120) return 'ev-top';
+  if (ev >= 110) return 'ev-high';
+  if (ev >= EV_BORDER) return 'ev-plus';
+  return '';
+}
+
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+function fmtTime(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+//-------------------------------------------------
+// 台操作
+//-------------------------------------------------
+function newMachine(no) {
+  return {
+    id: uid(), no: String(no),
+    currentGame: null, lastHit: null,
+    shutter: false, shutterGame: null,
+    shutterState: 'unknown',   // 'yes' | 'no' | 'unknown'
+    startCondition: null,      // 'at' | 'reset' | null（未選択）
+    fakeTenmei: 'unknown',     // 'yes' | 'no' | 'unknown' （384ゾーン用）
+    memo: '', events: []
+  };
+}
+
+function setStartCondition(id, val) {
+  const m = findMachine(id);
+  if (!m) return;
+  m.startCondition = val;
+  // 設定変更後は初当たり回数=0固定
+  if (val === 'reset') m.lastHit = 0;
+  const labelMap = { at: 'AT後', reset: '設定変更後' };
+  showToast(`台${m.no}: 開始条件 → ${labelMap[val] || val}`, 'success');
+  flashRow(id);
+  save(); render();
+}
+function setFakeTenmei(id, val) {
+  const m = findMachine(id);
+  if (!m) return;
+  m.fakeTenmei = val;
+  const labelMap = { yes: 'あり', no: 'なし', unknown: '未確認' };
+  showToast(`台${m.no}: フェイク天命 → ${labelMap[val] || val}`, val === 'yes' ? 'success' : '');
+  flashRow(id);
+  save(); render();
+}
+
+function setShutterState(id, val) {
+  const m = findMachine(id);
+  if (!m) return;
+  m.shutterState = val;
+  m.shutter = (val === 'yes');
+  // 「あり」を選んだ瞬間の現在あべし数を発生あべしとして自動記録
+  if (val === 'yes') {
+    if (m.currentGame != null && m.currentGame !== '') {
+      m.shutterGame = +m.currentGame;
+    }
+    pushEvent(m, `シャッターあり`, m.currentGame);
+    showToast(`台${m.no}: シャッター → あり`, 'success');
+  }
+  if (val === 'no') { pushEvent(m, 'シャッターなし', m.currentGame); showToast(`台${m.no}: シャッター → なし`, 'warn'); }
+  if (val === 'unknown') { m.shutter = false; showToast(`台${m.no}: シャッター → 未確認`); }
+  flashRow(id);
+  save(); render();
+}
+
+function addRangeToStore(store, from, to) {
+  const lo = Math.min(from, to);
+  const hi = Math.max(from, to);
+  const existing = new Set(store.machines.map(m => String(m.no)));
+  let added = 0;
+  for (let n = lo; n <= hi; n++) {
+    if (existing.has(String(n))) continue;
+    store.machines.push(newMachine(n));
+    added++;
+  }
+  return added;
+}
+
+function findMachine(id) {
+  const s = currentStore();
+  return s ? s.machines.find(m => m.id === id) : null;
+}
+function updateField(id, field, val) {
+  const m = findMachine(id);
+  if (!m) return;
+  if (field === 'currentGame' || field === 'lastHit') {
+    m[field] = val === '' ? null : Math.max(0, parseInt(val, 10) || 0);
+  } else {
+    m[field] = val;
+  }
+  save(); render();
+}
+function updateShutter(id, val) {
+  const m = findMachine(id);
+  if (!m) return;
+  m.shutterGame = val === '' ? null : Math.max(0, parseInt(val, 10) || 0);
+  if (m.shutterGame != null) {
+    m.shutter = true;
+    pushEvent(m, 'シャッター', m.shutterGame);
+  }
+  save(); render();
+}
+function toggleFlag(id, flag) {
+  const m = findMachine(id);
+  if (!m) return;
+  m[flag] = !m[flag];
+  if (m[flag]) {
+    const labelMap = { shutter:'シャッター', tenmei:'天命の刻', battle:'バトル発展', hit:'AT当選' };
+    pushEvent(m, labelMap[flag] || flag, m.currentGame);
+  }
+  save(); render();
+}
+function pushEvent(m, type, game) {
+  m.events = m.events || [];
+  m.events.push({ type, game: game ?? null, at: Date.now() });
+  if (m.events.length > 20) m.events = m.events.slice(-20);
+}
+function deleteMachine(id) {
+  const m = findMachine(id);
+  if (!m) return;
+  if (!confirm(`台${m.no} を削除しますか？`)) return;
+  const store = currentStore();
+  store.machines = store.machines.filter(x => x.id !== id);
+  if (expandedId === id) expandedId = null;
+  save(); render();
+}
+
+//-------------------------------------------------
+// 店舗操作
+//-------------------------------------------------
+function openStoreModal() {
+  document.getElementById('newStoreName').value = '';
+  document.getElementById('newStoreFrom').value = '';
+  document.getElementById('newStoreTo').value = '';
+  document.getElementById('storeModal').classList.add('show');
+  setTimeout(() => document.getElementById('newStoreName').focus(), 100);
+}
+function closeStoreModal() {
+  document.getElementById('storeModal').classList.remove('show');
+}
+function saveNewStore() {
+  const name = document.getElementById('newStoreName').value.trim();
+  if (!name) { alert('店舗名を入力してください'); return; }
+  const from = parseInt(document.getElementById('newStoreFrom').value, 10);
+  const to = parseInt(document.getElementById('newStoreTo').value, 10);
+  const s = { id: uid(), name, machines: [] };
+  if (!isNaN(from) && !isNaN(to)) {
+    const diff = Math.abs(to - from) + 1;
+    if (diff > 500) {
+      if (!confirm(`${diff}台を登録します。よろしいですか？`)) return;
+    }
+    addRangeToStore(s, from, to);
+  }
+  state.stores.push(s);
+  state.currentStoreId = s.id;
+  closeStoreModal();
+  // 新規店舗は台番号順で表示
+  sortMode = 'no_asc';
+  // 説明パネルを閉じて画面領域を確保
+  document.querySelector('.info-panel')?.removeAttribute('open');
+  save(); render();
+  // 画面を一番上にスクロール → リスト先頭を確実に見せる
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  showToast(`店舗「${name}」を追加 (${s.machines.length}台)`, 'success');
+}
+
+let storeToDelete = null;
+function openStoreDelFromTool() {
+  const s = currentStore();
+  if (!s) return;
+  openStoreDelModal(s);
+}
+function openStoreDelModal(store) {
+  storeToDelete = store;
+  document.getElementById('storeDelTitle').textContent = `「${store.name}」を削除しますか？`;
+  document.getElementById('storeDelModal').classList.add('show');
+}
+function closeStoreDelModal() {
+  storeToDelete = null;
+  document.getElementById('storeDelModal').classList.remove('show');
+}
+function confirmDeleteStore() {
+  if (!storeToDelete) return;
+  state.stores = state.stores.filter(s => s.id !== storeToDelete.id);
+  if (state.currentStoreId === storeToDelete.id) {
+    state.currentStoreId = state.stores[0]?.id ?? null;
+  }
+  closeStoreDelModal();
+  save(); render();
+  showToast(`店舗を削除しました`, 'warn');
+}
+
+//-------------------------------------------------
+// レンジ追加
+//-------------------------------------------------
+function openRangeAddModal() {
+  if (!currentStore()) {
+    showToast('先に店舗を追加してください', 'warn');
+    return;
+  }
+  document.getElementById('rangeAddFrom').value = '';
+  document.getElementById('rangeAddTo').value = '';
+  document.getElementById('rangeAddModal').classList.add('show');
+  setTimeout(() => document.getElementById('rangeAddFrom').focus(), 100);
+}
+
+//-------------------------------------------------
+// レンジ削除
+//-------------------------------------------------
+function openRangeDelModal() {
+  const s = currentStore();
+  if (!s || s.machines.length === 0) {
+    showToast('削除する台がありません', 'warn');
+    return;
+  }
+  document.getElementById('rangeDelFrom').value = '';
+  document.getElementById('rangeDelTo').value = '';
+  document.getElementById('rangeDelModal').classList.add('show');
+  setTimeout(() => document.getElementById('rangeDelFrom').focus(), 100);
+}
+function closeRangeDelModal() {
+  document.getElementById('rangeDelModal').classList.remove('show');
+}
+function confirmRangeDel() {
+  const from = parseInt(document.getElementById('rangeDelFrom').value, 10);
+  const to = parseInt(document.getElementById('rangeDelTo').value, 10);
+  if (isNaN(from) || isNaN(to)) { alert('開始と終了の台番号を入力してください'); return; }
+  const lo = Math.min(from, to), hi = Math.max(from, to);
+  const store = currentStore();
+  if (!store) return;
+  // 先に該当台を数えてからconfirm
+  const targets = store.machines.filter(m => {
+    const n = +m.no;
+    return !isNaN(n) && n >= lo && n <= hi;
+  });
+  if (targets.length === 0) {
+    showToast('該当する台はありませんでした', 'warn');
+    return;
+  }
+  if (!confirm(`${lo}〜${hi} 番のうち ${targets.length}台 を削除します。よろしいですか？`)) return;
+  store.machines = store.machines.filter(m => {
+    const n = +m.no;
+    return isNaN(n) || n < lo || n > hi;
+  });
+  closeRangeDelModal();
+  save(); render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  showToast(`${targets.length}台を削除しました`, 'warn');
+}
+function closeRangeAddModal() {
+  document.getElementById('rangeAddModal').classList.remove('show');
+}
+function confirmRangeAdd() {
+  const from = parseInt(document.getElementById('rangeAddFrom').value, 10);
+  const to = parseInt(document.getElementById('rangeAddTo').value, 10);
+  if (isNaN(from) || isNaN(to)) { alert('開始と終了の台番号を入力してください'); return; }
+  const diff = Math.abs(to - from) + 1;
+  if (diff > 500) {
+    if (!confirm(`${diff}台を追加します。よろしいですか？`)) return;
+  }
+  const added = addRangeToStore(currentStore(), from, to);
+  closeRangeAddModal();
+  // 追加した台が即見えるよう「台番号↑」に切替
+  sortMode = 'no_asc';
+  // 説明パネルを閉じて画面領域を確保
+  document.querySelector('.info-panel')?.removeAttribute('open');
+  save(); render();
+  // 画面トップに戻して machineList を確実に表示
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  showToast(`${added}台を追加（既存はスキップ）`, 'success');
+}
+
+//-------------------------------------------------
+// インポート/エクスポート
+//-------------------------------------------------
+function exportData() {
+  const json = JSON.stringify(state, null, 2);
+  navigator.clipboard.writeText(json).then(() => {
+    alert('クリップボードにコピーしました');
+  }, () => {
+    const w = window.open('', '_blank');
+    w.document.write('<pre>' + escapeHtml(json) + '</pre>');
+  });
+}
+function importData() {
+  const txt = prompt('JSONを貼り付けてください（既存データは上書きされます）');
+  if (!txt) return;
+  try {
+    const obj = JSON.parse(txt);
+    if (!obj.stores || !Array.isArray(obj.stores)) throw new Error('invalid');
+    state = obj;
+    if (!state.currentStoreId || !state.stores.find(s => s.id === state.currentStoreId)) {
+      state.currentStoreId = state.stores[0]?.id;
+    }
+    save(); render();
+    alert('インポートしました');
+  } catch (e) {
+    alert('JSONの形式が不正です');
+  }
+}
+
+//-------------------------------------------------
+// 起動
+//-------------------------------------------------
+render();
+</script>
+</body>
+</html>
